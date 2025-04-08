@@ -1,12 +1,8 @@
 # SHIFT
 
-**The Yield Optimization Protocol**
-
 SHIFT is an innovative protocol designed to provide yield for users by leveraging funding rates through neutral trading strategies within shifting vaults. By utilizing advanced trading mechanisms, SHIFT offers a secure and efficient way for users to maximize their returns in the dynamic financial markets.
 
 SHIFT is proudly developed and owned by **Nebula Labs**, a collective of developers that aims to create beautiful, interconnected systems in the vast Web3 universe.
-
-Visit the official X account: [SHIFT YieldFi](https://x.com/SHIFTYieldFi)
 
 ## Features
 

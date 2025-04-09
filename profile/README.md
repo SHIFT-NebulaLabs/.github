@@ -26,6 +26,5 @@ Through its advanced trading strategies and innovative vaults, SHIFT empowers us
 
 ## Get Started
 
-To stay up-to-date with SHIFT and learn more about its features, visit the X account:
-[SHIFT YieldFi](https://x.com/SHIFTYieldFi)
+To stay up-to-date with SHIFT and learn more about its features, visit the X account.
 

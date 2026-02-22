@@ -17,8 +17,9 @@ Before writing any code, you MUST read the following files from the current repo
 - `src/jobs/job-template.js` → base structure for every job
 - `src/jobs/deposit-job.js` → real-world example of a complex job
 - `src/jobs/withdraw-job.js` → real-world example of a complex job
+- `src/jobs/rebalance-job.js` → most complex job, reference for branching logic and full error handling
 - `src/jobs/index.js` → how jobs are registered
-- `src/config/constants.js` → token and market configuration patterns
+- `src/config/constants.js` → token, market, and provider configuration patterns
 - `src/config/config.js` → environment variable patterns
 - `src/scheduler/cron.js` → how jobs are scheduled
 
@@ -39,11 +40,13 @@ For each requested job:
 1. **`src/jobs/<job-name>.js`** — the complete job file
 2. **`src/jobs/index.js`** — updated to register the new job
 3. **`src/scheduler/cron.js`** — updated only if the job has a schedule
+4. **`src/config/constants.js`** — updated only if the job requires new token or provider constants
 
 ## Mandatory code rules
 Every generated job MUST follow these patterns without exception:
 
 ### 1. Step-based metadata for crash recovery
+Always initialize metadata on first execution. Detect retries with the `else` branch.
 ```javascript
 if (!metadata.executionId) {
     metadata.executionId = `exec-${Date.now()}`;
@@ -52,17 +55,22 @@ if (!metadata.executionId) {
     metadata.unit = {};
     metadata.raw = {};
     metadata.data = {};
+} else {
+    logger.info('Retry execution detected');
 }
 ```
 
 ### 2. Progressive atomic steps
+Each step must be idempotent and update `metadata.step` only on success.
 ```javascript
 if (metadata.step < 1) {
+    logger.debug('Step 1: <description>');
     // atomic operation
     metadata.step = 1;
     metadata.lastUpdate = new Date().toISOString();
 }
 if (metadata.step < 2) {
+    logger.debug('Step 2: <description>');
     // next atomic operation
     metadata.step = 2;
     metadata.lastUpdate = new Date().toISOString();
@@ -89,6 +97,69 @@ Always register the new job in `src/jobs/index.js` using `registerJob()` with th
 - `requiresLock: true` for jobs that require exclusive execution
 - `requiresLock: false` for jobs that can run in parallel
 - `description`: a short human-readable description
+
+### 9. Error handling — catch block
+Always attach metadata to the error before re-throwing so the scheduler can persist the recovery state.
+```javascript
+} catch (error) {
+    error.updatedMetadata = metadata;
+    throw error;
+}
+```
+
+### 10. Return structure
+On success, return `{ success: true }`. For a critical failure that must stop retries, return a failure object instead of throwing.
+```javascript
+// success
+return { success: true };
+
+// critical failure — stop retrying
+return { success: false, shouldStop: true, message, updatedMetadata: metadata };
+```
+
+### 11. Finally block
+Always include a `finally` block for resource cleanup (e.g. closing connections).
+```javascript
+} finally {
+    // cleanup resources — e.g. await client.disconnect();
+}
+```
+
+### 12. Development testing block
+Every job file must end with a self-executing test block guarded by `NODE_ENV`:
+```javascript
+// ════════════════════════════════════════════════════════════
+//  DEV — run directly: node src/jobs/<job-name>.js
+// ════════════════════════════════════════════════════════════
+if (process.env.NODE_ENV === 'development') {
+    const metadata = {};
+    jobName({ metadata })
+        .then(result => console.log('Result:', result))
+        .catch(err => console.error('Error:', err));
+}
+```
+
+### 13. Constants from the nebula-library submodule
+Constants that are shared across strategies live in the `nebula-library/` git submodule.
+Always import shared constants from the submodule path, not from local files:
+```javascript
+import { SOME_CONSTANT } from '../../nebula-library/src/config/constants.js';
+```
+Only add constants to `src/config/constants.js` when they are specific to this strategy and not present in the submodule.
+
+### 14. PROVIDER_CONFIG pattern for new providers
+When adding a new trading provider, follow the same pattern as `PERP_CONFIG` in `src/config/constants.js`:
+```javascript
+export const PROVIDER_CONFIG = {
+    MARKET_ID: 'ETH-PERP',
+    // ... other provider-specific constants
+};
+```
+
+### 15. Adding new token/market constants
+When the provider requires tokens or markets not already in `src/config/constants.js`:
+1. Check `nebula-library/src/config/constants.js` first — if the constant exists there, import it from there instead.
+2. If it does not exist in the submodule, add it to `src/config/constants.js` following the existing grouping and naming conventions (e.g. `TOKENS`, `MARKETS`, or a dedicated `<PROVIDER>_CONFIG` object).
 
 ## General rules
 - Do NOT invent business logic — implement exactly what the user describes

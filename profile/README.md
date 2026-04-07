@@ -14,15 +14,6 @@ liquidity provision, and structured reward programs.
 
 ---
 
-## 🏗️ Products
-
-| Product | Description | Chain |
-|---------|-------------|-------|
-| **extUSD** | Delta-neutral yield stablecoin with Pendle pool integration | Arbitrum |
-| **ltPARA** | Liquid token vault for PARA market-making | Starknet |
-
----
-
 ## ⚙️ How Strategies Work
 
 Before a single dollar is deployed, every strategy passes through five stages:

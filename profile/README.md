@@ -107,7 +107,6 @@ Shift is building for that future.
 
 - 🌐 Website: [shiftprotocol.xyz](https://shiftprotocol.xyz)
 - 𝕏 Twitter: [@shiftprotocol_](https://x.com/shiftprotocol_)
-- 📖 Docs: [docs.shiftprotocol.xyz](#) *(link your GitBook here)*
 - 📈 Analytics: [DeFiLlama](https://defillama.com/protocol/shift-protocol)
 
 ---
